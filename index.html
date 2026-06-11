@@ -781,6 +781,54 @@ function Soon({ title, kicker, stage, icon }) {
   );
 }
 
+/* ---- Monthly Brief (EXT · 시장 브리프 뷰어) ---- */
+const BRIEFS = [
+  { vol:"Vol.19", title:"8.8 Million — 정점의 문턱에서", date:"2026.05.22", region:"Vietnam Inbound", pages:8, file:"vol19.pdf", tags:["입국 8.8M 최고치","인도 +71%","피크 객실 선점"] },
+  { vol:"Vol.18", title:"Closer. Shorter. Vietnam Wins Both Ways.", date:"2026.04.23", region:"Vietnam Inbound", pages:16, file:"vol18.pdf", tags:["Q1 6.76M (+12%)","러시아 +163%","중동→동남아 전환"] },
+  { vol:"Vol.17", title:"Jet Fuel Crisis — 기회의 창", date:"2026.04", region:"Vietnam Inbound", pages:11, file:"vol17.pdf", tags:["제트유 위기","공급 제약","요금 기회"] },
+  { vol:"Vol.16", title:"Vietnam Inbound Edition", date:"2026.03", region:"Vietnam Inbound", pages:13, file:"vol16.pdf", tags:["3월 시장 동향"] },
+  { vol:"Vol.15", title:"Vietnam Inbound Edition", date:"2026.02", region:"Vietnam Inbound", pages:13, file:"vol15.pdf", tags:["2월 시장 동향"] },
+];
+function MonthlyBrief() {
+  const [sel, setSel] = useState(BRIEFS[0]);
+  return (
+    <div className="fade">
+      <PageHeader kicker="INSIGHT · 시장 브리프" title="Monthly Brief" stage="EXT" sub="OHMY Monthly Brief · Vietnam Inbound — 시장 흐름을 호텔 액션으로 연결합니다." />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          {BRIEFS.map((b)=>{
+            const active = sel.file===b.file;
+            return (
+              <button key={b.file} onClick={()=>setSel(b)} className={cls("w-full text-left p-3 rounded-xl border transition", active?"border-orange bg-orange-soft":"border-hair bg-white hover:bg-cream")}>
+                <div className="flex items-center justify-between">
+                  <span className="kick text-[10px] font-bold text-orange-deep">{b.vol}</span>
+                  <span className="num text-[11px] text-mute">{b.date}</span>
+                </div>
+                <p className="font-bold text-sm mt-1 leading-snug">{b.title}</p>
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {b.tags.map((t)=><span key={t} className="text-[10px] bg-green-soft text-green-deep px-1.5 py-0.5 rounded">{t}</span>)}
+                </div>
+                <p className="text-[11px] text-mute mt-1.5">{b.region} · {b.pages}p</p>
+              </button>
+            );
+          })}
+        </div>
+        <Card className="lg:col-span-2 overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between p-3 border-b border-hair">
+            <div><span className="kick text-[10px] font-bold text-orange-deep">{sel.vol}</span><p className="font-bold text-sm leading-tight">{sel.title}</p></div>
+            <div className="flex gap-2 shrink-0">
+              <a href={sel.file} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-ink2 border border-hair hover:bg-cream">새 탭 ↗</a>
+              <a href={sel.file} download className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-orange text-white hover:bg-orange-deep">다운로드</a>
+            </div>
+          </div>
+          <iframe title={sel.vol} src={sel.file} className="w-full bg-cream" style={{height:"700px",border:"0"}}></iframe>
+          <p className="text-[11px] text-mute px-3 py-2 border-t border-hair">PDF가 보이지 않으면 ‘새 탭 ↗’으로 열어보세요.</p>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 /* ============================================================ SHELL */
 const NAV = [
   { group:"INSIGHT", sub:"성과 · 기회 · 콘텐츠", items:[
@@ -835,6 +883,7 @@ function App() {
       case "channel": return <ChannelMatrix notify={notify} />;
       case "stack": return <DiscountStack />;
       case "demand": return <Demand />;
+      case "brief": return <MonthlyBrief />;
       case "bookings": return <Bookings notify={notify} />;
       case "profile": return <Profile notify={notify} />;
       case "contract": return <Contract notify={notify} />;
