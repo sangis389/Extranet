@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OHMYHOTEL&CO · Extranet (PRD v1.0 · Master v2.3 프로토타입)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      orange: { DEFAULT: "#FF6000", deep: "#D14E00", soft: "#FFF1E6" },
+      green:  { DEFAULT: "#009538", deep: "#007A2F", soft: "#E6F5EC" },
+      ink: "#1F1A17", ink2: "#383838", mute: "#8A8580", hair: "#EDE7DF", cream: "#FFFCF8",
+    },
+    fontFamily: { sans: ['Pretendard','-apple-system','BlinkMacSystemFont','Malgun Gothic','sans-serif'] },
+  }},
+};
+</script>
+<style>
+  body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif; }
+  .num { font-variant-numeric: tabular-nums; }
+  .kick { text-transform: uppercase; letter-spacing: 0.18em; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #EDE7DF; border-radius: 4px; }
+  .fade { animation: fd .25s ease; }
+  @keyframes fd { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: none;} }
+  .stripe { background-image: repeating-linear-gradient(45deg, #FFF1E6, #FFF1E6 5px, #fff 5px, #fff 10px); }
+</style>
+</head>
+<body class="bg-cream text-ink">
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useMemo } = React;
+const won = (n) => "₩" + (n ?? 0).toLocaleString("ko-KR");
+const cls = (...a) => a.filter(Boolean).join(" ");
+
+/* ---------- icons (Lucide-style line) ---------- */
+const Ic = ({ d, s = 18, c = "" }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={c}>{d}</svg>
+);
+const I = {
+  sun: <Ic d={<><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></>} />,
+  grid: <Ic d={<><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></>} />,
+  pulse: <Ic d={<><path d="M3 12h4l3 8 4-16 3 8h4"/></>} />,
+  heart: <Ic d={<><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></>} />,
+  bulb: <Ic d={<><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12c.7.7 1 1.3 1 2h6c0-.7.3-1.3 1-2a7 7 0 0 0-4-12z"/></>} />,
+  trend: <Ic d={<><path d="M3 3v18h18"/><path d="M7 14l3-3 4 4 5-6"/></>} />,
+  news: <Ic d={<><path d="M4 4h13v16H6a2 2 0 0 1-2-2V4z"/><path d="M17 8h3v10a2 2 0 0 1-2 2M8 8h6M8 12h6M8 16h4"/></>} />,
+  cal: <Ic d={<><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></>} />,
+  layers: <Ic d={<><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></>} />,
+  tag: <Ic d={<><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7" cy="7" r="1.5"/></>} />,
+  pct: <Ic d={<><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></>} />,
+  moon: <Ic d={<><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></>} />,
+  bed: <Ic d={<><path d="M2 8v12M2 12h18a2 2 0 0 1 2 2v6M2 16h20M6 12V9a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></>} />,
+  content: <Ic d={<><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 21"/></>} />,
+  book: <Ic d={<><path d="M2 7l10 6 10-6"/><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M6 21h12"/></>} />,
+  chat: <Ic d={<><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></>} />,
+  star: <Ic d={<><path d="m12 2 3 7 7 .5-5.5 4.5L18 21l-6-3.5L6 21l1.5-7L2 9.5 9 9z"/></>} />,
+  wallet: <Ic d={<><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 14h2"/></>} />,
+  crown: <Ic d={<><path d="M2 6l4 4 6-7 6 7 4-4v12H2V6z"/></>} />,
+  building: <Ic d={<><rect x="4" y="2" width="16" height="20" rx="1"/><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></>} />,
+  bank: <Ic d={<><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 10v11M12 10v11M16 10v11"/></>} />,
+  doc: <Ic d={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></>} />,
+  users: <Ic d={<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></>} />,
+  help: <Ic d={<><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4M12 17h.01"/></>} />,
+  bell: <Ic d={<><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></>} />,
+  search: <Ic d={<><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></>} />,
+  plus: <Ic d={<><path d="M12 5v14M5 12h14"/></>} />,
+  check: <Ic d={<><path d="M20 6 9 17l-5-5"/></>} />,
+  up: <Ic d={<><path d="M12 19V5M5 12l7-7 7 7"/></>} />,
+  down: <Ic d={<><path d="M12 5v14M19 12l-7 7-7-7"/></>} />,
+  bolt: <Ic d={<><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></>} />,
+  copy: <Ic d={<><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>} />,
+  warn: <Ic d={<><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></>} />,
+  chevD: <Ic d={<><path d="m6 9 6 6 6-6"/></>} s={16} />,
+};
+
+/* ---------- primitives ---------- */
+const Kicker = ({ children, c="text-orange-deep" }) => <p className={cls("kick text-[10px] font-bold", c)}>{children}</p>;
+const Card = ({ className="", children }) => <div className={cls("bg-white rounded-xl border border-hair", className)}>{children}</div>;
+const Stage = ({ s }) => {
+  if (!s) return null;
+  const m = { "1ST":"bg-orange-soft text-orange-deep", "NEW":"bg-green text-white", "EXT":"bg-green-soft text-green-deep" };
+  return <span className={cls("kick text-[9px] font-bold px-1.5 py-0.5 rounded", m[s])} style={{letterSpacing:"0.08em"}}>{s}</span>;
+};
+const Btn = ({ variant="primary", icon, children, onClick, className="" }) => {
+  const m = {
+    primary: "bg-orange text-white hover:bg-orange-deep",
+    green: "bg-green text-white hover:bg-green-deep",
+    ghost: "bg-white text-ink2 border border-hair hover:bg-cream",
+    soft: "bg-orange-soft text-orange-deep hover:bg-orange/20",
+  };
+  return <button onClick={onClick} className={cls("inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold transition", m[variant], className)}>{icon}{children}</button>;
+};
+function PageHeader({ kicker, title, sub, stage }) {
+  return (
+    <div className="mb-5 flex items-start justify-between">
+      <div>
+        <Kicker>{kicker}</Kicker>
+        <div className="flex items-center gap-2 mt-1">
+          <h1 className="text-[26px] font-bold leading-tight">{title}</h1>
+          <Stage s={stage} />
+        </div>
+        {sub && <p className="text-sm text-mute mt-1">{sub}</p>}
+      </div>
+    </div>
+  );
+}
+function KpiCard({ label, value, delta, dir, sub }) {
+  const dc = dir === "up" ? "text-green" : dir === "down" ? "text-orange-deep" : "text-mute";
+  return (
+    <Card className="p-4">
+      <p className="kick text-[10px] text-mute font-semibold">{label}</p>
+      <p className="num text-[26px] font-extrabold text-orange-deep mt-1 leading-none">{value}</p>
+      <div className="flex items-center gap-1 mt-1.5">
+        {delta && <span className={cls("num text-xs font-bold flex items-center", dc)}>{dir==="up"?I.up:dir==="down"?I.down:null}{delta}</span>}
+        {sub && <span className="text-xs text-mute">{sub}</span>}
+      </div>
+    </Card>
+  );
+}
+const accentColor = { BEST:"orange", GOOD:"green", NEW:"green", QUICK:"orange", EASY:"green" };
+function OppCard({ category, accent, title, why, impact, impactSub, cta, onApply }) {
+  const col = accentColor[accent] || "orange";
+  const stripe = col === "green" ? "bg-green" : "bg-orange";
+  const btn = col === "green" ? "green" : "primary";
+  return (
+    <Card className="overflow-hidden flex">
+      <div className={cls("w-1.5 shrink-0", stripe)}></div>
+      <div className="flex-1 p-4 flex flex-col md:flex-row gap-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="kick text-[9px] font-bold text-mute">{category}</span>
+            <span className={cls("kick text-[9px] font-bold px-1.5 py-0.5 rounded", col==="green"?"bg-green-soft text-green-deep":"bg-orange-soft text-orange-deep")}>{accent}</span>
+          </div>
+          <p className="font-bold text-[15px] mb-1.5">{title}</p>
+          <ul className="space-y-0.5">
+            {why.map((w,i)=><li key={i} className="text-xs text-mute flex gap-1.5"><span className="text-orange">•</span>{w}</li>)}
+          </ul>
+        </div>
+        <div className="md:w-44 shrink-0 md:border-l md:border-hair md:pl-4 flex flex-col justify-between">
+          <div>
+            <p className="kick text-[9px] text-mute font-semibold">예상 임팩트</p>
+            <p className="num text-lg font-extrabold text-green">{impact}</p>
+            <p className="text-[11px] text-mute">{impactSub}</p>
+            <p className="text-[10px] text-mute mt-1">검토 → 승인 → 약 5분 내 반영</p>
+          </div>
+          <Btn variant={btn} className="mt-2 w-full" icon={I.bolt} onClick={onApply}>{cta}</Btn>
+        </div>
+      </div>
+    </Card>
+  );
+}
+const Callout = ({ label, text, accent="orange" }) => {
+  const o = accent === "green";
+  return (
+    <div className={cls("flex rounded-xl overflow-hidden", o?"bg-green-soft":"bg-orange-soft")}>
+      <div className={cls("w-1.5 shrink-0", o?"bg-green":"bg-orange")}></div>
+      <div className="p-4">
+        <Kicker c={o?"text-green-deep":"text-orange-deep"}>{label}</Kicker>
+        <p className="text-sm text-ink2 mt-1">{text}</p>
+      </div>
+    </div>
+  );
+};
+const DarkBlock = ({ label, children }) => (
+  <div className="rounded-xl p-6" style={{ background:"#1F1A17" }}>
+    <Kicker c="text-orange">{label}</Kicker>
+    <div className="mt-2 text-sm" style={{ color:"#D4CFC8" }}>{children}</div>
+  </div>
+);
+const PermDot = ({ perm }) => {
+  const m = { self:["bg-green","직접 수정"], approval:["bg-orange","승인 필요"], admin:["bg-mute","열람 전용"] };
+  const [c,l] = m[perm];
+  return <span className="inline-flex items-center gap-1 text-[11px] text-mute"><span className={cls("w-2 h-2 rounded-full", c)}></span>{l}</span>;
+};
+function Modal({ title, desc, onClose, children, wide }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4" onClick={onClose}>
+      <div className={cls("bg-white rounded-2xl shadow-xl w-full fade", wide?"max-w-2xl":"max-w-md")} onClick={(e)=>e.stopPropagation()}>
+        <div className="p-5 border-b border-hair"><h3 className="text-lg font-bold">{title}</h3>{desc&&<p className="text-sm text-mute mt-1">{desc}</p>}</div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+const Row = ({ k, v }) => <div className="flex justify-between text-sm"><span className="text-mute">{k}</span><span className="num font-semibold">{v}</span></div>;
+
+/* ============================================================ SCREENS */
+
+/* ---- Today (1ST) ---- */
+function Today({ go, notify }) {
+  const [insight, setInsight] = useState(true);
+  const hero = [
+    { label:"오늘 체크인", value:"18", sub:"건", icon:I.book },
+    { label:"오늘밤 점유율", value:"62%", dir:"up", delta:"+4%", icon:I.moon },
+    { label:"이번주 매출 (vs 지난주)", value:won(31200000), dir:"up", delta:"+12%", icon:I.trend },
+  ];
+  return (
+    <div className="space-y-5 fade">
+      <Card className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4" >
+        <div>
+          <Kicker>아침 브리핑 · 수요일</Kicker>
+          <h1 className="text-[26px] font-bold mt-1">안녕하세요, 오마이호텔 명동 👋</h1>
+          <p className="text-sm text-mute mt-0.5 flex items-center gap-1">{I.sun} 맑음 24° · 오늘 처리할 일을 30초 안에 확인하세요.</p>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {hero.map((h)=>(
+            <div key={h.label} className="text-center px-3">
+              <p className="num text-2xl font-extrabold text-orange-deep">{h.value}<span className="text-sm text-mute font-bold">{h.sub||""}</span></p>
+              <p className="text-[11px] text-mute mt-0.5">{h.label}</p>
+              {h.delta&&<p className={cls("num text-[11px] font-bold", h.dir==="up"?"text-green":"text-orange-deep")}>{h.delta}</p>}
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-bold flex items-center gap-1.5">{I.bulb} 오늘의 기회 <span className="text-xs text-mute font-normal">임팩트순 Top 3</span></h3>
+          <button onClick={()=>go("opp")} className="text-sm font-semibold text-orange-deep">전체 보기 →</button>
+        </div>
+        <div className="space-y-3">
+          <OppCard category="PROMOTION" accent="BEST" title="주말(6/13~14) 막판 특가 15% 적용" why={["점유율 41% — 컴프셋 평균 대비 18%p 낮음","주말 검색량 +32% 상승 중","적용 시 예약 전환 +2.3%p 기대"]} impact={"+"+won(1800000)} impactSub="주말 2일 예상 추가 매출" cta="지금 적용" onApply={()=>notify("프로모션 적용됨 · 48개 채널 반영 중")} />
+          <OppCard category="AVAILABILITY" accent="QUICK" title="6/20~22 디럭스 객실 할당 +5 오픈" why={["3개 채널에서 매진 처리됨","해당 기간 수요 'PEAK' 등급","마감 해제 시 노출 회복"]} impact="+8건" impactSub="예상 추가 예약" cta="할당 열기" onApply={()=>notify("할당이 오픈되었습니다 · 동기화 시작")} />
+          <OppCard category="CONTENT" accent="EASY" title="객실 사진 3장 추가 업로드" why={["필수 사진 10장 중 7장만 등록","사진 완성 호텔은 조회수 +21%","Property Health +6점 기대"]} impact="+6점" impactSub="Property Health" cta="사진 업로드" onApply={()=>go("content")} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-5">
+          <h3 className="font-bold mb-3">처리할 일</h3>
+          <div className="divide-y divide-hair">
+            {[["미컨펌 예약 2건","마감 SLA 24시간","bookings","orange"],["미응답 리뷰 3건","평균 응답 2일","reviews","green"],["계약 만료 D-45","Contract Vault","contract","orange"],["누락 콘텐츠 알림","사진 3장 부족","content","green"]].map(([t,s,to,c],i)=>(
+              <button key={i} onClick={()=>go(to)} className="w-full flex items-center justify-between py-2.5 text-left hover:bg-cream rounded-lg px-2 -mx-2">
+                <div className="flex items-center gap-2"><span className={cls("w-2 h-2 rounded-full", c==="orange"?"bg-orange":"bg-green")}></span><span className="text-sm">{t}</span></div>
+                <span className="text-xs text-mute">{s}</span>
+              </button>
+            ))}
+          </div>
+        </Card>
+        {insight && (
+          <Card className="p-5 relative">
+            <button onClick={()=>setInsight(false)} className="absolute top-3 right-3 text-mute text-xs">닫기 ✕</button>
+            <Kicker c="text-green-deep">HARE NEWS · 실시간 시장</Kicker>
+            <p className="font-bold mt-2">중화권 6월 방한 수요 급증 — 명동 권역 직접 영향</p>
+            <p className="text-sm text-mute mt-1">Ctrip·Meituan 검색량이 전주 대비 +28%. 귀 호텔 권역 수요가 'PEAK'로 전환되었습니다.</p>
+            <Btn variant="green" className="mt-3" icon={I.bolt} onClick={()=>go("demand")}>수요 예측 보기</Btn>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---- Performance (1ST) ---- */
+function Performance() {
+  const [range, setRange] = useState("30");
+  const [cmp, setCmp] = useState("직전 기간");
+  const k = [
+    { label:"예약", value:"412", delta:"+8%", dir:"up", sub:"건" },
+    { label:"ADR", value:won(132000), delta:"+5%", dir:"up" },
+    { label:"매출", value:won(54400000), delta:"+12%", dir:"up" },
+    { label:"점유율", value:"68%", delta:"-3%", dir:"down" },
+    { label:"취소율", value:"9.2%", delta:"-1.1%", dir:"up" },
+    { label:"전환율", value:"3.4%", delta:"+0.3%", dir:"up" },
+  ];
+  const ch = [["Ctrip Korea",38],["Agoda",22],["Booking",16],["Direct",14],["Meituan",10]];
+  return (
+    <div className="space-y-5 fade">
+      <PageHeader kicker="INSIGHT · 성과 분석" title="Performance" stage="1ST" sub="기간별 6대 지표를 분석합니다. Today와 달리 심층 리뷰용입니다." />
+      <Card className="p-3 flex flex-wrap items-center gap-2 justify-between">
+        <div className="flex gap-1.5">
+          {["7","14","30","90","365"].map((r)=>(
+            <button key={r} onClick={()=>setRange(r)} className={cls("num px-3 py-1.5 rounded-lg text-sm font-semibold", range===r?"bg-orange text-white":"bg-white border border-hair text-ink2 hover:bg-cream")}>{r}일</button>
+          ))}
+        </div>
+        <div className="flex gap-1.5">
+          {["직전 기간","전년 동기"].map((c)=>(
+            <button key={c} onClick={()=>setCmp(c)} className={cls("px-3 py-1.5 rounded-lg text-sm font-semibold", cmp===c?"bg-green-soft text-green-deep":"bg-white border border-hair text-mute")}>{c} 대비</button>
+          ))}
+        </div>
+      </Card>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">{k.map((x)=><KpiCard key={x.label} {...x} />)}</div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-5">
+          <h3 className="font-bold mb-3">채널별 TTV</h3>
+          {ch.map(([n,v])=>(
+            <div key={n} className="mb-2.5">
+              <div className="flex justify-between text-xs mb-1"><span className="text-ink2">{n}</span><span className="num font-semibold">{v}%</span></div>
+              <div className="h-2 bg-hair rounded-full"><div className="h-2 rounded-full bg-orange" style={{width:v+"%"}}></div></div>
+            </div>
+          ))}
+        </Card>
+        <Card className="p-5">
+          <h3 className="font-bold mb-3">픽업 커브 (D-30 → D-0)</h3>
+          <div className="flex items-end gap-1.5 h-40">
+            {[8,14,19,26,30,37,44,52,61,73,88,100].map((h,i)=>(<div key={i} className="flex-1 bg-green/70 rounded-t" style={{height:h+"%"}}></div>))}
+          </div>
+          <p className="text-xs text-mute mt-2">선택 기간의 일자별 누적 예약 픽업 패턴</p>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+/* ---- Property Health (NEW) ---- */
+function Health({ notify }) {
+  const score = 84;
+  const r = 52, circ = 2*Math.PI*r, off = circ*(1-score/100);
+  const subs = [
+    ["가격 경쟁력","25%",78],["할당 가용성","20%",91],["콘텐츠 완성도","20%",70],["응답 속도(24h)","15%",95],["리뷰 점수","20%",88],
+  ];
+  const comp = [["우리 호텔",84,true],["명동 G 호텔",88,false],["시그니처 명동",81,false],["L7 명동",79,false],["나인트리",76,false]];
+  return (
+    <div className="space-y-5 fade">
+      <PageHeader kicker="INSIGHT · 운영 건강도" title="Property Health" stage="NEW" sub="가격·할당·콘텐츠·응답·리뷰를 종합한 0–100 운영 점수입니다." />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="p-6 flex flex-col items-center justify-center">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r={r} fill="none" stroke="#EDE7DF" strokeWidth="12"/>
+            <circle cx="70" cy="70" r={r} fill="none" stroke="#FF6000" strokeWidth="12" strokelinecap="round" strokeDasharray={circ} strokeDashoffset={off} transform="rotate(-90 70 70)"/>
+            <text x="70" y="66" textAnchor="middle" className="num" fontSize="32" fontWeight="800" fill="#1F1A17">{score}</text>
+            <text x="70" y="86" textAnchor="middle" fontSize="11" fill="#8A8580">/ 100</text>
+          </svg>
+          <p className="mt-2 font-bold text-green">GOOD</p>
+          <p className="num text-xs text-green">▲ +3 vs 지난주</p>
+        </Card>
+        <Card className="lg:col-span-2 p-5">
+          <h3 className="font-bold mb-3">세부 점수 (가중치)</h3>
+          <div className="space-y-3">
+            {subs.map(([n,w,v])=>(
+              <div key={n}>
+                <div className="flex justify-between text-xs mb-1"><span className="text-ink2">{n} <span className="text-mute">· {w}</span></span><span className="num font-semibold">{v}</span></div>
+                <div className="h-2 bg-hair rounded-full"><div className={cls("h-2 rounded-full", v>=85?"bg-green":v>=75?"bg-orange":"bg-orange-deep")} style={{width:v+"%"}}></div></div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-5">
+          <h3 className="font-bold mb-3">경쟁 세트 (컴프셋)</h3>
+          {comp.sort((a,b)=>b[1]-a[1]).map(([n,v,self])=>(
+            <div key={n} className={cls("flex items-center justify-between py-2 px-2 -mx-2 rounded-lg", self&&"bg-orange-soft")}>
+              <span className={cls("text-sm", self&&"font-bold text-orange-deep")}>{n}</span>
+              <span className="num font-semibold">{v}</span>
+            </div>
+          ))}
+        </Card>
+        <DarkBlock label="다음 개선 액션 · Top 3">
+          <div className="space-y-3 mt-1">
+            {[["콘텐츠 완성도 ↑","사진 3장 추가","+6점"],["가격 경쟁력 ↑","주말 ADR 8% 조정","+5점"],["응답 속도 ↑","리뷰 3건 응답","+3점"]].map(([t,s,d],i)=>(
+              <div key={i} className="flex items-center justify-between">
+                <div><p className="font-bold text-white text-sm">{t}</p><p className="text-xs" style={{color:"#A89F95"}}>{s}</p></div>
+                <button onClick={()=>notify(t+" 적용 요청됨")} className="num text-xs font-bold px-2.5 py-1.5 rounded-lg bg-orange text-white">{d} 적용</button>
+              </div>
+            ))}
+          </div>
+        </DarkBlock>
+      </div>
+    </div>
+  );
+}
+
+/* ---- Opportunity Center (NEW) ---- */
+function Opportunity({ notify }) {
+  const tabs = ["전체","예약률 ↑","조회수 ↑","검색 노출","운영 효율"];
+  const [tab, setTab] = useState("전체");
+  const data = [
+    { t:"예약률 ↑", category:"PROMOTION", accent:"BEST", title:"주말 막판 특가 15% 적용", why:["점유율 41%","주말 검색 +32%","전환 +2.3%p"], impact:"+"+won(1800000), impactSub:"주말 추가 매출", cta:"지금 적용" },
+    { t:"예약률 ↑", category:"PRICE", accent:"GOOD", title:"평일 ADR 5% 인하 테스트", why:["평일 공실 多","컴프셋 대비 +9%","탄력 구간"], impact:"+11건", impactSub:"주중 예상 예약", cta:"가격 적용" },
+    { t:"조회수 ↑", category:"CONTENT", accent:"EASY", title:"객실 사진 3장 추가", why:["필수 10장 중 7장","조회수 +21%","Health +6"], impact:"+21%", impactSub:"리스팅 조회수", cta:"사진 업로드" },
+    { t:"조회수 ↑", category:"AVAILABILITY", accent:"QUICK", title:"6/20~22 할당 +5 오픈", why:["3채널 매진","수요 PEAK","노출 회복"], impact:"+8건", impactSub:"예상 예약", cta:"할당 열기" },
+    { t:"검색 노출", category:"GROWTH", accent:"NEW", title:"Ctrip 채널 가격 패리티 정렬", why:["±2% 초과 위반","랭킹 하락 요인","정렬 시 회복"], impact:"+3계단", impactSub:"OTA 랭킹", cta:"패리티 정렬" },
+    { t:"운영 효율", category:"EFFICIENCY", accent:"EASY", title:"리뷰 자동 응답 템플릿 적용", why:["미응답 3건","응답속도 점수↑","15분 절약"], impact:"+3점", impactSub:"응답 속도", cta:"템플릿 적용" },
+  ];
+  const list = tab==="전체"?data:data.filter((d)=>d.t===tab);
+  return (
+    <div className="space-y-5 fade">
+      <PageHeader kicker="INSIGHT · 기회 센터" title="Opportunity Center" stage="NEW" sub="AI가 임팩트순으로 추천하는 액션. 모든 카드는 1-클릭 적용으로 끝납니다." />
+      <div className="flex gap-1.5 flex-wrap">
+        {tabs.map((t)=>(
+          <button key={t} onClick={()=>setTab(t)} className={cls("px-3.5 py-2 rounded-lg text-sm font-semibold", tab===t?"bg-orange text-white":"bg-white border border-hair text-ink2 hover:bg-cream")}>{t}</button>
+        ))}
+      </div>
+      <div className="space-y-3">
+        {list.map((d,i)=><OppCard key={i} {...d} onApply={()=>notify(d.title+" — 적용 요청됨")} />)}
+      </div>
+    </div>
+  );
+}
+
+/* ---- Calendar (1ST) ---- */
+function Calendar({ notify }) {
+  const [room, setRoom] = useState("디럭스 더블");
+  const [edit, setEdit] = useState(null);
+  const [bulk, setBulk] = useState(false);
+  const labels = ["일","월","화","수","목","금","토"];
+  const days = useMemo(()=>{
+    const a=[]; for(let i=0;i<35;i++){ const date=i-2; const occ=[38,41,92,0,55,60,47,73,80,35,42,88][i%12];
+      a.push({date,occ,rate:120000+(i%5)*12000,inv:[3,2,1,0,5,4,2,1,3,6,2,1][i%12],copied:i%9===0,override:i%7===3}); }
+    return a;
+  },[room]);
+  const cellState = (d) => {
+    if(d.inv===0 && d.occ>=90) return "sold";
+    if(d.inv===0) return "block";
+    if(d.inv<=3) return "low";
+    return "ok";
+  };
+  return (
+    <div className="space-y-4 fade relative">
+      <PageHeader kicker="INVENTORY · 요금 · 재고" title="Calendar" stage="1ST" sub="가장 많이 쓰는 화면. 한 날짜 업데이트를 30분 → 30초로. (캘린더-우선)" />
+      <Card className="p-3 flex flex-wrap items-center gap-3 justify-between">
+        <div className="flex items-center gap-2">
+          <Btn variant="ghost" className="!px-2.5">◀</Btn><span className="font-bold px-1">2026년 6월</span><Btn variant="ghost" className="!px-2.5">▶</Btn>
+          <div className="flex gap-1 ml-2">{["월","주","일"].map((v,i)=><button key={v} className={cls("px-2.5 py-1.5 rounded-lg text-xs font-semibold", i===0?"bg-orange-soft text-orange-deep":"text-mute")}>{v}</button>)}</div>
+        </div>
+        <div className="flex items-center gap-2">
+          <select value={room} onChange={(e)=>setRoom(e.target.value)} className="border border-hair rounded-lg px-3 py-2 text-sm">{["디럭스 더블","스탠다드 트윈","이그제큐티브 스위트"].map((r)=><option key={r}>{r}</option>)}</select>
+          <select className="border border-hair rounded-lg px-3 py-2 text-sm"><option>전체 채널</option><option>Ctrip Korea</option><option>Agoda</option></select>
+          <Btn variant="primary" icon={I.plus} onClick={()=>setBulk(true)}>일괄 수정</Btn>
+        </div>
+      </Card>
+      <Card className="p-3">
+        <div className="grid grid-cols-7 gap-1.5 mb-1.5">{labels.map((l,i)=><div key={l} className={cls("text-center text-xs font-semibold py-1", i===0?"text-orange-deep":i===6?"text-green-deep":"text-mute")}>{l}</div>)}</div>
+        <div className="grid grid-cols-7 gap-1.5">
+          {days.map((d,i)=>{
+            if(d.date<=0) return <div key={i} className="rounded-lg border border-hair bg-cream min-h-[92px]"></div>;
+            const st = cellState(d);
+            const bg = st==="sold"?"bg-orange-deep text-white border-orange-deep": st==="block"?"stripe border-hair": st==="low"?"bg-orange-soft border-orange/30":"bg-white border-hair";
+            return (
+              <button key={i} onClick={()=>setEdit(d)} className={cls("relative rounded-lg border p-2 min-h-[92px] text-xs text-left hover:ring-2 hover:ring-orange/40", bg)}>
+                <div className="flex justify-between items-start">
+                  <span className={cls("num font-semibold", st==="sold"?"text-white":"")}>{d.date}</span>
+                  <span className={cls("num text-[10px] font-semibold", st==="sold"?"text-white/80":d.occ<50?"text-orange-deep":"text-mute")}>{d.occ}%</span>
+                </div>
+                {d.copied && <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-green"></span>}
+                <div className="mt-1">
+                  <div className={cls("num font-bold", st==="sold"?"text-white":"")}>{(d.rate/1000).toFixed(0)}k</div>
+                  <div className={cls("num text-[11px]", st==="sold"?"text-white/80":"text-mute")}>{st==="block"?"하드블록":"잔여 "+d.inv}</div>
+                </div>
+                {d.override && <span className="absolute bottom-1.5 right-1.5 text-mute">{I.layers}</span>}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap gap-3 mt-3 text-[11px] text-mute">
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-deep"></span>매진</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded stripe border border-hair"></span>하드블록</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-soft"></span>재고 부족(≤3)</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green"></span>템플릿 복사됨</span>
+          <span className="flex items-center gap-1">{I.layers}채널 오버라이드</span>
+        </div>
+      </Card>
+      <Callout label="POWER FEATURE · 미래 날짜 복사" text="기준 날짜를 '템플릿'으로 지정 후 미래 기간으로 드래그하면 요금·재고·제한이 한 번에 복사됩니다. 30분 작업이 드래그 한 번으로." />
+
+      {edit && (
+        <Modal title={`6월 ${edit.date}일 · ${room}`} desc="인라인 편집 — Enter 저장 / Esc 취소" onClose={()=>setEdit(null)}>
+          <div className="space-y-3 text-sm">
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className="text-mute">요금 (KRW)</label><input defaultValue={edit.rate} className="num border border-hair rounded-lg px-3 py-2 w-full mt-1" /></div>
+              <div><label className="text-mute">잔여 재고</label><input defaultValue={edit.inv} className="num border border-hair rounded-lg px-3 py-2 w-full mt-1" /></div>
+            </div>
+            <label className="flex items-center gap-2 text-ink2"><input type="checkbox" className="accent-orange" /> 하드 블록 (할당 무시)</label>
+            <button className="text-xs text-orange-deep font-semibold">+ 채널별 요금 오버라이드</button>
+            <div className="flex justify-end gap-2 pt-2">
+              <Btn variant="ghost" onClick={()=>setEdit(null)}>취소</Btn>
+              <Btn variant="primary" icon={I.check} onClick={()=>{ setEdit(null); notify("저장됨 · 48개 채널 동기화 (되돌리기 24h)"); }}>저장 후 적용</Btn>
+            </div>
+          </div>
+        </Modal>
+      )}
+      {bulk && (
+        <Modal wide title="일괄 수정" desc="날짜 범위·요일을 선택해 한 번에 반영합니다." onClose={()=>setBulk(false)}>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="space-y-3">
+              <div><label className="text-mute">날짜 범위</label><div className="flex gap-2 mt-1"><input defaultValue="2026-06-13" className="num border border-hair rounded-lg px-3 py-2 w-full" /><input defaultValue="2026-06-30" className="num border border-hair rounded-lg px-3 py-2 w-full" /></div></div>
+              <div><label className="text-mute">요일</label><div className="flex gap-1 mt-1">{labels.map((l)=><span key={l} className="px-2 py-1 border border-hair rounded text-xs cursor-pointer hover:bg-cream">{l}</span>)}</div></div>
+              <div><label className="text-mute">변경 방식</label><select className="border border-hair rounded-lg px-3 py-2 w-full mt-1"><option>설정 (set)</option><option>+%</option><option>-%</option><option>치환 (replace)</option></select></div>
+              <div><label className="text-mute">값</label><input defaultValue="150000" className="num border border-hair rounded-lg px-3 py-2 w-full mt-1" /></div>
+            </div>
+            <div className="bg-orange-soft rounded-xl p-4">
+              <Kicker>미리보기</Kicker>
+              <p className="text-sm text-ink2 mt-2">영향 받는 셀: <b className="num">14개 날짜</b></p>
+              <p className="text-sm text-ink2">오버라이드 충돌: <b className="num">0건</b></p>
+              <p className="text-xs text-mute mt-2">요금 1~9,999,999원 · 재고 0 이상(0=마감) · 최소숙박 1~30박</p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4 mt-2 border-t border-hair">
+            <Btn variant="ghost" onClick={()=>setBulk(false)}>취소</Btn>
+            <Btn variant="primary" icon={I.check} onClick={()=>{ setBulk(false); notify("일괄 수정 적용 · 14개 날짜 동기화"); }}>적용</Btn>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ---- Channel Matrix (1ST) ---- */
+function ChannelMatrix({ notify }) {
+  const [heat, setHeat] = useState(false);
+  const chans = ["Ctrip Korea","Agoda","Dida","Meituan","Booking","Direct"];
+  const dates = ["6/12","6/13","6/14","6/15","6/16"];
+  const base = 132;
+  const grid = dates.map((d,r)=> chans.map((c,k)=>{
+    const adr = base + ((r*3+k*5)%9) - 3 + (k===2?6:0);
+    const allot = (r+k)%4;
+    const parity = Math.abs(adr-base) > base*0.02 && (k===2||k===3);
+    return { adr, allot, parity, active: !(k===2 && r>2) };
+  }));
+  return (
+    <div className="space-y-4 fade">
+      <PageHeader kicker="INVENTORY · 채널 매트릭스" title="Channel Matrix" stage="1ST" sub="날짜 × 채널 그리드. 48개 채널을 한 화면에서 — 패리티 위반·채널 오버라이드 관리." />
+      <Card className="p-3 flex items-center justify-between">
+        <p className="text-sm text-mute">단위: ADR(천원) / 잔여 재고 · <span className="text-orange-deep font-semibold">주황 테두리 = 패리티 위반 (±2%)</span></p>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={heat} onChange={(e)=>setHeat(e.target.checked)} className="accent-orange" /> 패리티 히트맵</label>
+      </Card>
+      <Card className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead><tr className="bg-cream"><th className="text-left font-semibold px-4 py-2.5 text-mute">날짜</th>{chans.map((c)=><th key={c} className="text-center font-semibold px-3 py-2.5 whitespace-nowrap">{c}</th>)}</tr></thead>
+          <tbody className="divide-y divide-hair">
+            {grid.map((row,r)=>(
+              <tr key={r}>
+                <td className="num font-semibold px-4 py-2 text-mute">{dates[r]}</td>
+                {row.map((cell,k)=>(
+                  <td key={k} className="px-2 py-1.5">
+                    {cell.active ? (
+                      <div className={cls("num rounded-lg text-center py-1.5 px-1 cursor-pointer", cell.parity?"border-2 border-orange-deep":"border border-hair", heat&&cell.parity?"bg-orange-soft":"bg-white hover:bg-cream")} title={cell.parity?"패리티 위반":""} onClick={()=>notify(dates[r]+" · "+chans[k]+" 셀 편집")}>
+                        <div className="font-bold">{cell.adr}</div>
+                        <div className={cls("text-[11px]", cell.allot===0?"text-orange-deep":"text-mute")}>{cell.allot===0?"마감":"재고 "+cell.allot}</div>
+                      </div>
+                    ) : <div className="text-center text-mute text-xs py-2">—</div>}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+      <p className="text-xs text-mute">빈 셀(—) = 해당 날짜 비활성 채널 · 셀 클릭 시 인라인 편집</p>
+    </div>
+  );
+}
+
+/* ---- Discount Stack Simulator (NEW) ---- */
+function DiscountStack() {
+  const discounts = [["Basic",5],["Early Bird",10],["Mobile",5],["Genius",10],["Country Special",8],["Long Stay",12],["Last Minute",15]];
+  const [on, setOn] = useState({ "Basic":true, "Genius":true });
+  const base = 150000;
+  const steps = [];
+  let price = base;
+  discounts.forEach(([n,r])=>{ if(on[n]){ const cut = Math.round(price*r/100); price -= cut; steps.push([n,r,cut,price]); } });
+  const eff = Math.round((1-price/base)*1000)/10;
+  const safe = eff <= 22;
+  const stackCount = steps.length;
+  return (
+    <div className="space-y-4 fade">
+      <PageHeader kicker="INVENTORY · 할인 시뮬레이터" title="Discount Stack Simulator" stage="NEW" sub="채널·프로모션 누적 할인을 시뮬레이션해 마진 침식을 사전에 방지합니다." />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-5">
+          <h3 className="font-bold mb-3">할인 레이어 (7종)</h3>
+          <div className="space-y-2">
+            {discounts.map(([n,r])=>(
+              <label key={n} className={cls("flex items-center justify-between p-3 rounded-lg border cursor-pointer", on[n]?"border-orange bg-orange-soft":"border-hair")}>
+                <span className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!on[n]} onChange={(e)=>setOn({...on,[n]:e.target.checked})} className="accent-orange" />{n}</span>
+                <span className="num text-sm font-semibold text-mute">−{r}%</span>
+              </label>
+            ))}
+          </div>
+        </Card>
+        <div className="space-y-4">
+          <DarkBlock label="단계별 가격 계산">
+            <div className="space-y-1.5 mt-1">
+              <div className="flex justify-between"><span style={{color:"#A89F95"}}>기준가</span><span className="num font-bold text-white">{won(base)}</span></div>
+              {steps.map(([n,r,cut,p],i)=>(
+                <div key={i} className="flex justify-between"><span style={{color:"#A89F95"}}>{n} (−{r}%)</span><span className="num text-white">−{won(cut)} → <b className="text-orange">{won(p)}</b></span></div>
+              ))}
+              {steps.length===0 && <p style={{color:"#A89F95"}}>할인을 선택하세요.</p>}
+            </div>
+          </DarkBlock>
+          <Card className="p-5">
+            <div className="flex items-end justify-between">
+              <div><p className="kick text-[10px] text-mute font-semibold">최종 판매가</p><p className="num text-3xl font-extrabold text-orange-deep">{won(price)}</p></div>
+              <div className="text-right"><p className="kick text-[10px] text-mute font-semibold">실효 할인율</p><p className="num text-2xl font-extrabold">{eff}%</p></div>
+            </div>
+            <div className={cls("mt-3 rounded-lg px-3 py-2 text-sm font-semibold flex items-center gap-2", safe?"bg-green-soft text-green-deep":"bg-orange-soft text-orange-deep")}>
+              {safe?I.check:I.warn}{safe?"마진 임계선(22%) 이내 — 안전":"마진 임계선(22%) 초과 — 위험"}
+            </div>
+            <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+              <div className="bg-cream rounded-lg py-2"><p className="text-[10px] text-mute">순 커미션</p><p className="num font-bold text-sm">12%</p></div>
+              <div className="bg-cream rounded-lg py-2"><p className="text-[10px] text-mute">예상 마진</p><p className={cls("font-bold text-sm", safe?"text-green":"text-orange-deep")}>{safe?"양호":"주의"}</p></div>
+              <div className="bg-cream rounded-lg py-2"><p className="text-[10px] text-mute">스택 수</p><p className="num font-bold text-sm">{stackCount}</p></div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---- Demand Forecast (NEW) ---- */
+function Demand() {
+  const [span, setSpan] = useState("90");
+  const cells = Array.from({length: span==="90"?90:span==="180"?120:150}, (_,i)=>{
+    const lv = (Math.sin(i/4)+Math.cos(i/7)+2)/4; return Math.min(4, Math.floor(lv*5));
+  });
+  const heatC = ["#FFF1E6","#FFD3B0","#FFA866","#FF7A2E","#D14E00"];
+  const drivers = [["항공 좌석","+18%","중화권 노선 증편"],["검색량","+28%","명동 권역 급증"],["이벤트","2건","6/15 골든위크"],["환율·매크로","원화 약세","인바운드 우호"]];
+  return (
+    <div className="space-y-4 fade">
+      <PageHeader kicker="INSIGHT · 수요 예측" title="Demand Forecast" stage="NEW" sub="365일 시장 수요 예측 · 48채널 × 11개 송출국. Trip.com이 못 보는 교차 가시성." />
+      <Card className="p-3 flex items-center justify-between">
+        <div className="flex gap-1.5">{["90","180","365"].map((s)=><button key={s} onClick={()=>setSpan(s)} className={cls("num px-3 py-1.5 rounded-lg text-sm font-semibold", span===s?"bg-orange text-white":"bg-white border border-hair text-ink2")}>{s}일</button>)}</div>
+        <p className="text-sm font-semibold text-orange-deep">다음 PEAK: 6/15 골든위크</p>
+      </Card>
+      <Card className="p-5">
+        <div className="flex flex-wrap gap-1">
+          {cells.map((v,i)=><div key={i} className="w-3.5 h-3.5 rounded-sm" style={{background:heatC[v]}} title={"수요 "+v}></div>)}
+        </div>
+        <div className="flex items-center gap-2 mt-3 text-xs text-mute">낮음 {heatC.map((c,i)=><span key={i} className="w-3 h-3 rounded-sm" style={{background:c}}></span>)} 높음</div>
+      </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {drivers.map(([t,v,s])=>(
+          <Card key={t} className="p-4"><p className="kick text-[10px] text-mute font-semibold">{t}</p><p className="num text-lg font-extrabold text-green mt-1">{v}</p><p className="text-[11px] text-mute">{s}</p></Card>
+        ))}
+      </div>
+      <DarkBlock label="OMH 차별점">
+        <p>오직 <span className="text-orange font-bold">OHMYHOTEL&CO</span>만 <b className="text-white">채널 × 송출국</b> 교차 수요를 함께 봅니다. 어떤 채널이 어느 국가 수요를 실어 나르는지 — 단일 OTA로는 불가능한 시야입니다.</p>
+      </DarkBlock>
+    </div>
+  );
+}
+
+/* ---- Bookings (1ST) ---- */
+function Bookings({ notify }) {
+  const tabs = ["전체","미컨펌","확정","취소"];
+  const [tab, setTab] = useState("전체");
+  const rows = [
+    { guest:"김O민", dates:"6/14~16", ch:"Ctrip", amt:264000, st:"미컨펌" },
+    { guest:"L. Tran", dates:"6/13~14", ch:"Agoda", amt:98000, st:"미컨펌" },
+    { guest:"박O서", dates:"6/12~15", ch:"Direct", amt:870000, st:"확정" },
+    { guest:"J. Smith", dates:"6/11~12", ch:"Booking", amt:145000, st:"확정" },
+    { guest:"최O아", dates:"6/09~10", ch:"Meituan", amt:92000, st:"취소" },
+  ];
+  const tone = { 미컨펌:"bg-orange-soft text-orange-deep", 확정:"bg-green-soft text-green-deep", 취소:"bg-hair text-mute" };
+  const list = rows.filter((r)=>tab==="전체"||r.st===tab);
+  return (
+    <div className="space-y-4 fade">
+      <PageHeader kicker="MESSAGES · 예약" title="Bookings" stage="1ST" sub="예약 목록·필터·상세·취소 처리. (목록은 캘린더가 부적합한 예외 — 표 사용)" />
+      <div className="flex gap-1.5">{tabs.map((t)=><button key={t} onClick={()=>setTab(t)} className={cls("px-3.5 py-2 rounded-lg text-sm font-semibold", tab===t?"bg-orange text-white":"bg-white border border-hair text-ink2 hover:bg-cream")}>{t}{t==="미컨펌"&&" 2"}</button>)}</div>
+      <Card className="overflow-hidden">
+        <table className="w-full text-sm">
+          <thead><tr className="bg-cream text-mute">{["게스트","투숙일","채널","금액","상태",""].map((h)=><th key={h} className="text-left font-semibold px-4 py-2.5">{h}</th>)}</tr></thead>
+          <tbody className="divide-y divide-hair">
+            {list.map((r,i)=>(
+              <tr key={i} className="hover:bg-cream">
+                <td className="px-4 py-3 font-semibold">{r.guest}</td>
+                <td className="num px-4 py-3 text-ink2">{r.dates}</td>
+                <td className="px-4 py-3 text-mute">{r.ch}</td>
+                <td className="num px-4 py-3">{won(r.amt)}</td>
+                <td className="px-4 py-3"><span className={cls("text-xs font-semibold px-2 py-0.5 rounded-full", tone[r.st])}>{r.st}</span></td>
+                <td className="px-4 py-3 text-right">{r.st==="미컨펌" && <button onClick={()=>notify(r.guest+" 예약 컨펌 완료")} className="text-orange-deep font-semibold text-xs">컨펌</button>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+/* ---- Company Profile (NEW · ELLIS permission) ---- */
+function Profile({ notify }) {
+  const [req, setReq] = useState(null);
+  const Field = ({ label, value, perm, masked }) => (
+    <div className="flex items-center justify-between py-2.5 border-b border-hair group">
+      <div className="w-44 shrink-0 text-mute text-sm">{label}</div>
+      <div className="num flex-1 text-sm font-semibold">{masked ? "•••• •••• •••• "+value.slice(-4) : value}</div>
+      <PermDot perm={perm} />
+      <div className="w-20 text-right">
+        {perm!=="admin" && <button onClick={()=> perm==="approval" ? setReq(label) : notify(label+" 수정됨")} className="text-xs font-semibold text-orange-deep opacity-0 group-hover:opacity-100 transition">수정</button>}
+      </div>
+    </div>
+  );
+  return (
+    <div className="space-y-4 fade">
+      <PageHeader kicker="ACCOUNT · ELLIS Trader" title="Company Profile" stage="NEW" sub="ELLIS Trader 기본 정보. 권한에 따라 직접 수정 / 승인 요청 / 열람 전용으로 구분됩니다." />
+      <Callout label="대기 중 요청 1건" text="'사업자번호' 변경 요청이 관리자 승인 대기 중입니다 (SLA 1–3 영업일)." />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-5">
+          <Kicker>식별 · 연락처</Kicker>
+          <div className="mt-2">
+            <Field label="운영명" value="오마이호텔 명동" perm="self" />
+            <Field label="영문명" value="OhMyHotel Myeongdong" perm="self" />
+            <Field label="주소" value="서울 중구 명동길 00" perm="self" />
+            <Field label="대표 전화" value="02-000-0000" perm="self" />
+            <Field label="대표 이메일" value="stay@omh.com" perm="self" />
+            <Field label="정식 상호명" value="오마이호텔앤코 명동점" perm="approval" />
+          </div>
+        </Card>
+        <Card className="p-5">
+          <Kicker>세무 · 시스템 식별자</Kicker>
+          <div className="mt-2">
+            <Field label="사업자번호" value="000-00-00000" perm="approval" />
+            <Field label="업태" value="숙박업" perm="approval" />
+            <Field label="대표자명" value="홍OO" perm="approval" />
+            <Field label="Comp Code" value="OMH-1024" perm="admin" />
+            <Field label="거래 상태" value="ACTIVE" perm="admin" />
+            <Field label="정산 통화" value="KRW" perm="admin" />
+          </div>
+        </Card>
+      </div>
+      <div className="flex items-center gap-4 text-xs text-mute">
+        <PermDot perm="self" /><PermDot perm="approval" /><PermDot perm="admin" />
+        <span>· 약 30% 직접수정 / 21% 승인 / 49% 열람전용</span>
+      </div>
+      {req && (
+        <Modal title={"변경 요청 · "+req} desc="승인 권한 항목입니다. 사유와 증빙을 첨부해 관리자 큐로 제출합니다." onClose={()=>setReq(null)}>
+          <div className="space-y-3 text-sm">
+            <div><label className="text-mute">변경 값</label><input className="border border-hair rounded-lg px-3 py-2 w-full mt-1" /></div>
+            <div><label className="text-mute">사유 (50자 이상)</label><textarea className="border border-hair rounded-lg px-3 py-2 w-full mt-1 h-20" /></div>
+            <p className="text-xs text-mute">제출 시 변경 전 값은 승인 전까지 유지됩니다. 결과는 인앱·이메일로 통지됩니다.</p>
+            <div className="flex justify-end gap-2"><Btn variant="ghost" onClick={()=>setReq(null)}>취소</Btn><Btn variant="primary" onClick={()=>{ setReq(null); notify(req+" 변경 요청 제출됨 · 관리자 큐"); }}>요청 제출</Btn></div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ---- Contract Vault (NEW) ---- */
+function Contract({ notify }) {
+  const items = [
+    { type:"위탁판매 계약", st:"EXPIRING", title:"OMH 위탁판매 기본계약", valid:"2025.07.01 ~ 2026.07.31", dday:"D-45" },
+    { type:"상호계약(Mutual)", st:"ACTIVE", title:"채널 동시판매 합의서", valid:"2025.01.01 ~ 2026.12.31", dday:"D-204" },
+    { type:"부속 정책", st:"MAPPED", title:"무료취소·조식 정책", valid:"상시", dday:"—" },
+  ];
+  const tone = { ACTIVE:"bg-green-soft text-green-deep", EXPIRING:"bg-orange-soft text-orange-deep", MAPPED:"bg-hair text-mute" };
+  return (
+    <div className="space-y-4 fade">
+      <PageHeader kicker="ACCOUNT · ELLIS Trader" title="Contract Vault" stage="NEW" sub="계약 문서 보관 · 만료 알림 · 갱신 요청." />
+      <Callout label="만료 임박 · 90일 이내" text="'OMH 위탁판매 기본계약'이 45일 후 만료됩니다. 갱신 요청을 진행하세요." />
+      <div className="space-y-3">
+        {items.map((c,i)=>(
+          <Card key={i} className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-orange">{I.doc}</span>
+              <div>
+                <div className="flex items-center gap-2"><p className="font-bold text-sm">{c.title}</p><span className={cls("text-[10px] font-bold px-1.5 py-0.5 rounded", tone[c.st])}>{c.st}</span></div>
+                <p className="num text-xs text-mute">{c.type} · {c.valid}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={cls("num text-xs font-bold", c.st==="EXPIRING"?"text-orange-deep":"text-mute")}>{c.dday}</span>
+              <Btn variant="ghost" className="!py-1.5 !text-xs">다운로드</Btn>
+              {c.st==="EXPIRING" && <Btn variant="primary" className="!py-1.5 !text-xs" onClick={()=>notify("갱신 요청 제출됨")}>갱신 요청</Btn>}
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---- Coming soon placeholder ---- */
+function Soon({ title, kicker, stage, icon }) {
+  return (
+    <div className="fade">
+      <PageHeader kicker={kicker} title={title} stage={stage} />
+      <Card className="p-12 flex flex-col items-center text-center">
+        <div className="text-orange/40 mb-3">{icon}</div>
+        <p className="font-semibold text-ink2">이 화면은 PRD에 정의되어 있습니다.</p>
+        <p className="text-sm text-mute mt-1">본 프로토타입은 Phase-1 핵심 화면과 ELLIS 권한 모델을 우선 구현했습니다. 해당 화면은 로드맵 단계에서 구체화됩니다.</p>
+      </Card>
+    </div>
+  );
+}
+
+/* ============================================================ SHELL */
+const NAV = [
+  { group:"INSIGHT", sub:"성과 · 기회 · 콘텐츠", items:[
+    { id:"today", label:"Today", icon:I.sun, stage:"1ST" },
+    { id:"perf", label:"Performance", icon:I.pulse, stage:"1ST" },
+    { id:"health", label:"Property Health", icon:I.heart, stage:"NEW" },
+    { id:"opp", label:"Opportunity Center", icon:I.bulb, stage:"NEW" },
+    { id:"demand", label:"Demand Forecast", icon:I.trend, stage:"NEW" },
+    { id:"hare", label:"HARE News", icon:I.news, stage:"EXT" },
+    { id:"brief", label:"Monthly Brief", icon:I.doc, stage:"EXT" },
+  ]},
+  { group:"INVENTORY", sub:"요금 · 할당 · 콘텐츠", items:[
+    { id:"cal", label:"Calendar", icon:I.cal, stage:"1ST" },
+    { id:"channel", label:"Channel Matrix", icon:I.grid, stage:"1ST" },
+    { id:"promo", label:"Promotions", icon:I.tag },
+    { id:"stack", label:"Discount Stack", icon:I.layers, stage:"NEW" },
+    { id:"tonite", label:"Express Tonight", icon:I.moon, stage:"EXT" },
+    { id:"rooms", label:"Rooms / Rate Plans", icon:I.bed },
+    { id:"content", label:"Hotel Content", icon:I.content },
+  ]},
+  { group:"MESSAGES", sub:"예약 · 대화 · 리뷰", items:[
+    { id:"bookings", label:"Bookings", icon:I.book, stage:"1ST" },
+    { id:"chat", label:"Chat (24/7)", icon:I.chat, stage:"1ST" },
+    { id:"reviews", label:"Reviews", icon:I.star },
+  ]},
+  { group:"ACCOUNT", sub:"정산 · 등급 · 설정", items:[
+    { id:"bill", label:"Billing & Settlement", icon:I.wallet },
+    { id:"tier", label:"Tier & Points", icon:I.crown, stage:"1ST" },
+    { id:"profile", label:"Company Profile", icon:I.building, stage:"NEW" },
+    { id:"banking", label:"Banking & Settlement", icon:I.bank, stage:"NEW" },
+    { id:"contract", label:"Contract Vault", icon:I.doc, stage:"NEW" },
+    { id:"team", label:"Team & Access", icon:I.users, stage:"NEW" },
+    { id:"notice", label:"Notice / FAQ", icon:I.help },
+  ]},
+];
+
+function App() {
+  const [screen, setScreen] = useState("today");
+  const [hotel, setHotel] = useState("오마이호텔 명동");
+  const [toast, setToast] = useState("");
+  const notify = (m) => { setToast(m); setTimeout(()=>setToast(""), 2800); };
+  const go = (s) => { setScreen(s); window.scrollTo(0,0); };
+  const meta = {};
+  NAV.forEach((g)=>g.items.forEach((it)=>meta[it.id]={...it, group:g.group, sub:g.sub}));
+  const render = () => {
+    switch(screen){
+      case "today": return <Today go={go} notify={notify} />;
+      case "perf": return <Performance />;
+      case "health": return <Health notify={notify} />;
+      case "opp": return <Opportunity notify={notify} />;
+      case "cal": return <Calendar notify={notify} />;
+      case "channel": return <ChannelMatrix notify={notify} />;
+      case "stack": return <DiscountStack />;
+      case "demand": return <Demand />;
+      case "bookings": return <Bookings notify={notify} />;
+      case "profile": return <Profile notify={notify} />;
+      case "contract": return <Contract notify={notify} />;
+      default: { const m=meta[screen]||{}; return <Soon title={m.label} kicker={(m.group||"")+" · "+(m.sub||"")} stage={m.stage} icon={m.icon} />; }
+    }
+  };
+  return (
+    <div className="flex min-h-screen">
+      <aside className="w-64 bg-white border-r border-hair flex flex-col shrink-0">
+        <div className="px-5 py-5 border-b border-hair flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-orange flex items-center justify-center text-white font-bold">O</div>
+          <div><p className="font-extrabold leading-tight tracking-wide text-sm">OHMYHOTEL&CO</p><p className="text-[11px] text-mute">Partner Extranet · v2.3</p></div>
+        </div>
+        <nav className="flex-1 p-3 space-y-4 overflow-y-auto">
+          {NAV.map((g)=>(
+            <div key={g.group}>
+              <p className="px-3 mb-1.5"><span className="kick text-[10px] font-bold text-orange-deep">{g.group}</span><span className="block text-[10px] text-mute">{g.sub}</span></p>
+              <div className="space-y-0.5">
+                {g.items.map((n)=>{
+                  const active = screen===n.id;
+                  return (
+                    <button key={n.id} onClick={()=>go(n.id)} className={cls("w-full flex items-center gap-2.5 pl-3 pr-2 py-2 rounded-lg text-sm font-medium transition border-l-2", active?"bg-orange-soft text-orange-deep border-orange":"border-transparent text-ink2 hover:bg-cream")}>
+                      <span className="shrink-0">{n.icon}</span>
+                      <span className="flex-1 text-left text-[13px]">{n.label}</span>
+                      <Stage s={n.stage} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-hair text-[10px] text-mute">PRD v1.0 · Master v2.3 프로토타입</div>
+      </aside>
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="bg-white border-b border-hair px-6 py-3 flex items-center justify-between sticky top-0 z-30">
+          <div className="relative">
+            <select value={hotel} onChange={(e)=>setHotel(e.target.value)} className="appearance-none font-semibold bg-cream rounded-lg pl-3 pr-8 py-2 text-sm cursor-pointer border border-hair">
+              {["오마이호텔 명동","오마이호텔 강남","오마이스테이 부산"].map((h)=><option key={h}>{h}</option>)}
+            </select>
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-mute pointer-events-none">{I.chevD}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2 bg-cream border border-hair rounded-lg px-3 py-2 text-sm text-mute w-56">{I.search}<span>메뉴·예약 검색</span></div>
+            <button className="relative p-2 rounded-lg hover:bg-cream text-mute">{I.bell}<span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange rounded-full"></span></button>
+            <div className="w-9 h-9 rounded-full bg-orange-soft text-orange-deep flex items-center justify-center font-bold text-sm">JL</div>
+          </div>
+        </header>
+        <main className="flex-1 p-6 max-w-[1184px] w-full mx-auto">{render()}</main>
+      </div>
+
+      {toast && <div className="fixed bottom-6 right-6 bg-ink text-white text-sm px-4 py-3 rounded-xl shadow-lg fade flex items-center gap-2 z-50"><span className="text-green">{I.check}</span>{toast}<span className="text-mute text-xs ml-2">되돌리기</span></div>}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
