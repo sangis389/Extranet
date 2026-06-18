@@ -369,8 +369,8 @@ function Promotions({ applied, onOpenProposal }){
     { rate:"Shared",    code:"885973", room:"Garden View Standard Twin", plan:"Late Check-in" },
   ];
   const PROMOS = [
-    { type:"얼리버드 (정률)", val:"-7%" },
-    { type:"연박 3박+ (정률)", val:"-5%" },
+    { type:"Early Bird", val:"-7%" },
+    { type:"Min & Max Nights (3박+)", val:"-5%" },
   ];
   const DRow = ({k,v}) => (<div className="flex py-1.5 border-b border-line last:border-0"><div className="w-44 shrink-0 text-mute">{k}</div><div className="flex-1 font-medium">{v}</div></div>);
   return (
@@ -392,13 +392,13 @@ function Promotions({ applied, onOpenProposal }){
           <div className="px-4 py-2.5 border-b border-line bg-page font-semibold text-sm">프로모션 상세 (Condition)</div>
           <div className="p-4 text-sm">
             <DRow k="프로모션 이름" v="여름 단거리 인바운드 성수기 선점" />
-            <DRow k="프로모션 타입" v="정률 할인 (Rate)" />
+            <DRow k="프로모션 타입" v="Early Bird · Min & Max Nights (2건)" />
             <DRow k="판매 개시" v={<span className="text-green-700 font-semibold">Yes</span>} />
             <DRow k="예약 시작 ~ 종료일" v="2026-06-18 ~ 2026-08-31  ·  요일: All" />
             <DRow k="체크인 시작 ~ 종료일" v="2026-07-01 ~ 2026-08-31  ·  요일: All" />
             <DRow k="환불 불가 여부" v="No (요금제 취소 정책 따름)" />
-            <DRow k="구성 프로모션" v={<span>2건 — ① 얼리버드 <b className="text-omgdeep">정률 -7%</b> &nbsp;·&nbsp; ② 연박 3박+ <b className="text-omgdeep">정률 -5%</b></span>} />
-            <DRow k="할인 방식" v="정률 (Rate, %) · KRW · 실제 extranet은 할인값 단일이라 프로모션 2건으로 설정" />
+            <DRow k="구성 프로모션" v={<span>2건 — ① <b>Early Bird</b> <b className="text-omgdeep">− Rate 7%</b> &nbsp;·&nbsp; ② <b>Min &amp; Max Nights</b>(3박+) <b className="text-omgdeep">− Rate 5%</b></span>} />
+            <DRow k="할인 방식" v="− (할인) · Rate (정률, %) · KRW — 실제 extranet 할인값은 단일이라 프로모션 2건으로 설정" />
             <DRow k="공급자 비고" v="OHMY Monthly Brief Vol.20 기반 자동 설정" />
           </div>
         </div>
@@ -425,7 +425,7 @@ function Promotions({ applied, onOpenProposal }){
               )))}
             </tbody>
           </table>
-          <p className="text-[11px] text-mute px-4 py-2 border-t border-line">실제 extranet Vendor Promotion 목록/상세 구조(객실타입·플랜·프로모션유형·예약/체크인 기간·적용값·판매여부)를 반영했습니다.</p>
+          <p className="text-[11px] text-mute px-4 py-2 border-t border-line">실제 extranet Vendor Promotion 구조 반영 · 프로모션유형 enum(Early Bird, Min &amp; Max Nights …)과 할인(− / Rate·Amount) 실제값 적용.</p>
         </div>
         </>
       ) : (
