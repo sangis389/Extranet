@@ -142,8 +142,15 @@ function Dashboard(){
 }
 
 /* ---------- Rate & Allotment (요금&재고) ---------- */
-function Rate(){
-  const days = [["화",9],["수",10],["목",11],["금",12],["토",13],["일",14],["월",15],["화",16]];
+function Rate({ applied }){
+  const plans = [
+    { room:"City View Standard Double", plan:"Free Breakfast", code:"895860", base:172000 },
+    { room:"City View Standard Double", plan:"Ladies Plan",    code:"892816", base:150000 },
+    { room:"Garden View Standard Twin", plan:"Free Breakfast", code:"887666", base:145000 },
+    { room:"Garden View Standard Twin", plan:"Late Check-in",  code:"885973", base:138000 },
+  ];
+  const dates = [["화","06/30",false],["수","07/01",true],["목","07/02",true],["금","07/03",true],["토","07/04",true],["일","07/05",true],["월","07/06",true]];
+  const fmt = (n)=>n.toLocaleString("ko-KR");
   return (
     <div className="space-y-4 fade">
       <div className="bg-white border border-line rounded p-4 space-y-3">
@@ -159,24 +166,55 @@ function Rate(){
           {["On Sale Only","Has Price Only","Has Allotment Only"].map(t=><label key={t} className="flex items-center gap-1.5 text-sm text-mute"><input type="checkbox" defaultChecked className="accent-omg" />{t}</label>)}
         </div>
       </div>
+      {applied && (
+        <div className="bg-green-50 border border-green-200 rounded px-4 py-2.5 text-sm text-green-800 flex items-center justify-between flex-wrap gap-2">
+          <span>✓ <b>Early Bird (−7%)</b> 프로모션이 요금에 반영되었습니다 · 적용 2026-07-01 ~ 08-31 · 3박+ 연박 시 <b>Min &amp; Max Nights −5%</b> 추가</span>
+          <span className="text-[11px] font-bold bg-green-600 text-white px-2 py-0.5 rounded">판매여부 Yes</span>
+        </div>
+      )}
       <div className="flex gap-2"><OBtn gray>모두 숨기기</OBtn><OBtn gray>할당 전용</OBtn><div className="flex-1"></div><OBtn gray>모두 해제</OBtn></div>
       <div className="bg-white border border-line rounded overflow-x-auto">
-        <div className="flex items-stretch min-w-max">
-          <div className="w-56 shrink-0 border-r border-line p-3 flex items-center gap-2">
-            <button className="text-mute">◀</button><span className="num text-sm font-semibold">6월 2026</span><button className="text-mute">▶</button>
+        <div className="flex items-stretch min-w-max border-b border-line">
+          <div className="w-64 shrink-0 border-r border-line p-3 flex items-center gap-2 bg-page">
+            <button className="text-mute">◀</button><span className="num text-sm font-semibold">2026년 7월</span><button className="text-mute">▶</button>
           </div>
-          {days.map(([w,d],i)=>(
-            <div key={i} className={cls("w-24 shrink-0 text-center py-2 border-r border-line", d===10?"bg-side text-white":w==="일"?"text-red":w==="토"?"text-blue-500":"")}>
-              <div className="text-xs">{w}</div><div className="num font-bold">{d}</div>
+          {dates.map(function(d,i){ var w=d[0],dt=d[1],promo=d[2]; return (
+            <div key={i} className={cls("w-28 shrink-0 text-center py-2 border-r border-line", w==="일"?"text-red":w==="토"?"text-blue-500":"", (promo&&applied)?"bg-orange-soft":"")}>
+              <div className="text-xs">{w}</div><div className="num font-bold">{dt}</div>
             </div>
-          ))}
+          ); })}
         </div>
-        <div className="p-10 text-center text-mute text-sm">검색하면 객실 타입별 요금·재고가 날짜 열에 표시됩니다. (현행 수평 그리드)</div>
+        {plans.map(function(p,ri){ var eb=Math.round(p.base*0.93); return (
+          <div key={ri} className="flex items-stretch min-w-max border-b border-line last:border-0">
+            <div className="w-64 shrink-0 border-r border-line p-2 text-xs">
+              <div className="font-semibold">{p.room}</div>
+              <div className="text-mute">{p.plan} <span className="num">[{p.code}]</span></div>
+            </div>
+            {dates.map(function(d,ci){ var promo=d[2]; var on=applied&&promo; return (
+              <div key={ci} className={cls("w-28 shrink-0 border-r border-line p-1.5 text-center text-xs", on?"bg-orange-soft":"")}>
+                {on ? (
+                  <div>
+                    <div className="num text-[10px] text-mute line-through">{fmt(p.base)}</div>
+                    <div className="num font-bold text-omgdeep">{fmt(eb)}</div>
+                    <div className="text-[9px] font-bold text-white bg-omg rounded px-1 inline-block mt-0.5">EB −7%</div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="num font-semibold mt-1">{fmt(p.base)}</div>
+                    <div className="num text-[10px] text-mute">잔여 5</div>
+                  </div>
+                )}
+              </div>
+            ); })}
+          </div>
+        ); })}
       </div>
+      {applied
+        ? <p className="text-[11px] text-mute">주황 셀 = 프로모션 적용가(Early Bird −7%). 3박 이상 연박 시 Min &amp; Max Nights −5% 추가 적용. 실제 extranet 요금&재고에 프로모션이 반영된 형태입니다.</p>
+        : <p className="text-[11px] text-mute">Monthly Brief 제안을 적용하면 해당 기간(07/01~08/31) 요금에 프로모션이 자동 반영됩니다.</p>}
     </div>
   );
 }
-
 /* ---------- Monthly Brief (신규 추가) ---------- */
 function Brief({onOpenProposal, notify}){
   const [sel,setSel] = useState(BRIEFS[0]);
@@ -451,7 +489,7 @@ function Screen({id, applied, onOpenProposal, notify}){
   switch(id){
     case "booking": return <Bookings/>;
     case "dash": return <Dashboard/>;
-    case "rate": return <Rate/>;
+    case "rate": return <Rate applied={applied}/>;
     case "brief": return <Brief onOpenProposal={onOpenProposal} notify={notify}/>;
     case "promo": return <Promotions applied={applied} onOpenProposal={onOpenProposal}/>;
     default: return <Generic label={MENU.concat([{id:"staff",label:"직원 목록"}]).find(m=>m.id===id)?.label || id} />;
