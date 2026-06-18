@@ -485,6 +485,14 @@ function Promotions({ applied, onOpenProposal }){
   );
 }
 
+function Generic({label}){
+  return (
+    <div className="fade bg-white border border-line rounded p-16 text-center">
+      <p className="font-semibold text-ink">{label}</p>
+      <p className="text-sm text-mute mt-1">현행 extranet의 해당 메뉴입니다. 본 데모는 Monthly Brief 추가 → 프로모션 자동 설정 → 요금&재고 반영 흐름을 보여주기 위한 것으로, 이 화면은 생략되었습니다.</p>
+    </div>
+  );
+}
 function Screen({id, applied, onOpenProposal, notify}){
   switch(id){
     case "booking": return <Bookings/>;
