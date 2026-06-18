@@ -433,6 +433,7 @@ function App(){
     const t=setTimeout(()=>setProposal(true),1200); return ()=>clearTimeout(t);
   },[]);
   const openProposal = ()=>setProposal(true);
+  const notify = (m)=>{ setToast(m); setTimeout(()=>setToast(""),3000); };
   const applyPromo = ()=>{ setApplied(true); setProposal(false); setToast("프로모션이 적용되었습니다 · 연동 채널 반영 중"); setTimeout(()=>setToast(""),3200); };
   return (
     <div className="flex h-screen overflow-hidden text-[13px]">
