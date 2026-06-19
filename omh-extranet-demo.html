@@ -533,6 +533,88 @@ function RatePlans(){
     </div>
   );
 }
+function ListScreen({ title, actions, filters, cols, rows, note }){
+  return (
+    <div className="space-y-3 fade">
+      <div className="flex justify-between items-center flex-wrap gap-2">
+        <h2 className="text-lg font-bold">{title}</h2>
+        <div className="flex gap-2">{actions}</div>
+      </div>
+      {filters && <div className="bg-white border border-line rounded p-3 flex flex-wrap items-center gap-3">{filters}<OBtn>검색</OBtn><OBtn gray>초기화</OBtn></div>}
+      <div className="bg-white border border-line rounded overflow-x-auto">
+        <table className="w-full text-xs whitespace-nowrap">
+          <thead className="bg-page text-mute"><tr>{cols.map(function(c){return <th key={c} className="px-3 py-2 text-left font-semibold border-b border-line">{c}</th>;})}</tr></thead>
+          <tbody className="divide-y divide-line">
+            {rows.length===0
+              ? <tr><td colSpan={cols.length} className="text-center text-mute py-12">No records available.</td></tr>
+              : rows.map(function(r,i){return <tr key={i} className="hover:bg-page">{r.map(function(c,j){return <td key={j} className="px-3 py-2">{c}</td>;})}</tr>;})}
+          </tbody>
+        </table>
+        {note && <p className="text-[11px] text-mute px-4 py-2 border-t border-line">{note}</p>}
+      </div>
+    </div>
+  );
+}
+function RoomTypes(){
+  return <ListScreen title="Room Types"
+    filters={<><Field label="호텔"><Sel w="w-44" opts={["TEST HOTEL"]} /></Field><Field label="판매 개시"><Sel w="w-20" opts={["Yes"]} /></Field><Field label="데이터 상태"><Sel opts={["All"]} /></Field></>}
+    cols={["객실타입순번","ELLIS 객실타입코드","CMS/PMS 정보","데이터상태","현지가격","객실타입명(영어)","판매여부"]}
+    rows={[
+      ["1","RT-895860","CMS · 정상","정상","₩150,000","City View Standard Double","Yes"],
+      ["2","RT-887666","CMS · 정상","정상","₩110,000","Garden View Standard Twin","Yes"],
+      ["3","RT-877309","CMS · 정상","정상","₩98,000","Economy Double","Yes"],
+      ["4","RT-851766","CMS · 정상","정상","₩320,000","Junior Suite Park View Double","Yes"],
+      ["5","RT-854977","CMS · 정상","정상","₩520,000","Presidential Suite Garden View Twin","Yes"],
+    ]}
+    note="실제 extranet Room Types 구조 반영 · 객실 타입은 CMS/PMS에서 연동되어 표시됩니다." />;
+}
+function Billing(){
+  return <ListScreen title="Vendor Billings"
+    actions={<><OBtn gray>청구 리스트</OBtn><OBtn gray>삭제</OBtn></>}
+    filters={<><Field label="결제 상태"><Sel opts={["All"]} /></Field><Field label="통화"><Sel w="w-24" opts={["KRW"]} /></Field><Field label="청구 잔액"><Sel opts={["All"]} /></Field></>}
+    cols={["Billing No.","Hotel Name","Issued Date","Payment Status","Paid Date","Vendor Currency","Vendor Sum Amount","Paid Amount","Balance"]}
+    rows={[
+      ["B-202606-001","TEST HOTEL","2026-06-15","Unpaid","-","KRW","4,820,000","0","4,820,000"],
+      ["B-202605-018","TEST HOTEL","2026-05-31","Paid","2026-06-05","KRW","6,140,000","6,140,000","0"],
+    ]}
+    note="실제 extranet Vendor Billings 구조 반영 · 상세(청구 리스트 상세): Booking Item Code · V. BKG/CNFM Code · Traveler · C/I·C/O·Nts · V. Sum/Paid/Balance · Dispute." />;
+}
+function FaqBoard(){
+  return <ListScreen title="FAQ Board"
+    cols={["게시순번","FAQ 유형","게시제목","최종수정일","조회수","첨부파일"]}
+    rows={[["200343","예약","Test FAQ","2026-06-18 16:06","470","No"]]}
+    note="실제 extranet FAQ Board 구조 반영." />;
+}
+function NoticeBoard(){
+  return <ListScreen title="Notice Board"
+    cols={["게시순번","게시제목","등록일","조회수","첨부파일"]}
+    rows={[
+      ["200331","[공지] 재고관리 기능 변경 안내 (Ver_2025.04.24)","2025-04-24","93,311","Yes"],
+      ["200319","[공지] 재고관리 기능 변경 안내 (Ver_2025.03.28)","2025-03-07","25,630","Yes"],
+      ["200318","extranet 매뉴얼","2024-09-20","426","Yes"],
+      ["200316","닷비즈 엑스트라넷 사용자 매뉴얼 - 프로모션 설정","2024-09-12","131","Yes"],
+      ["200314","OHMY V 2.0 정산 매뉴얼","2024-07-02","740","Yes"],
+    ]}
+    note="실제 extranet Notice Board 구조 반영." />;
+}
+function HotelContent(){
+  return <ListScreen title="Hotel Content"
+    filters={<Field label="호텔"><Sel w="w-44" opts={["TEST HOTEL"]} /></Field>}
+    cols={["코드","등급","호텔명(영어)","호텔명(한국어)","상태","호텔유형","전화번호","국가","지역명"]}
+    rows={[["OMH-1024","4성","OhMyHotel Myeongdong","오마이호텔 명동","Active","Hotel","02-000-0000","KR","Seoul · Myeongdong"]]}
+    note="실제 extranet Hotel Content 구조 반영 · 다국어 호텔명(EN/KO/JA/VI/ZH) · 등급 · 지역코드 · 등록/수정 이력 포함." />;
+}
+function StaffList(){
+  return <ListScreen title="Staff List"
+    actions={<OBtn>추가</OBtn>}
+    filters={<><Field label="ID"><Inp /></Field><Field label="최고 관리자"><Sel w="w-20" opts={["All"]} /></Field></>}
+    cols={["Name","ID","Office Phone No.","Mobile Phone No.","Email Address","Super User"]}
+    rows={[
+      ["홍길동","omh_admin","02-000-0000","010-0000-0000","stay@omh.com","Yes"],
+      ["김운영","omh_op1","02-000-0001","010-1111-1111","op1@omh.com","No"],
+    ]}
+    note="실제 extranet Staff List 구조 반영 · 호텔 측 직원 계정 관리." />;
+}
 function Generic({label}){
   return (
     <div className="fade bg-white border border-line rounded p-16 text-center">
@@ -549,6 +631,12 @@ function Screen({id, applied, onOpenProposal, notify}){
     case "brief": return <Brief onOpenProposal={onOpenProposal} notify={notify}/>;
     case "promo": return <Promotions applied={applied} onOpenProposal={onOpenProposal}/>;
     case "plans": return <RatePlans/>;
+    case "rooms": return <RoomTypes/>;
+    case "bill": return <Billing/>;
+    case "faq": return <FaqBoard/>;
+    case "notice": return <NoticeBoard/>;
+    case "hotel": return <HotelContent/>;
+    case "staff": return <StaffList/>;
     default: return <Generic label={MENU.concat([{id:"staff",label:"직원 목록"}]).find(m=>m.id===id)?.label || id} />;
   }
 }
