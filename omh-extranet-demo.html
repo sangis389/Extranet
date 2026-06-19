@@ -195,8 +195,8 @@ function Rate({ applied }){
                 {on ? (
                   <div>
                     <div className="num text-[10px] text-mute line-through">{fmt(p.base)}</div>
-                    <div className="num font-bold text-omgdeep">{fmt(eb)}</div>
-                    <div className="text-[9px] font-bold text-white bg-omg rounded px-1 inline-block mt-0.5">EB −7%</div>
+                    <div className="num font-bold text-omgdeep leading-tight">{fmt(eb)} <span className="text-[8px] text-white bg-omg rounded px-0.5 align-middle">EB −7%</span></div>
+                    <div className="num text-[10px] text-green-700 font-semibold leading-tight mt-0.5">{fmt(Math.round(eb*0.95))} <span className="text-[8px] text-white bg-green-600 rounded px-0.5 align-middle">3박+ −5%</span></div>
                   </div>
                 ) : (
                   <div>
@@ -210,7 +210,7 @@ function Rate({ applied }){
         ); })}
       </div>
       {applied
-        ? <p className="text-[11px] text-mute">주황 셀 = 프로모션 적용가(Early Bird −7%). 3박 이상 연박 시 Min &amp; Max Nights −5% 추가 적용. 실제 extranet 요금&재고에 프로모션이 반영된 형태입니다.</p>
+        ? <p className="text-[11px] text-mute">각 셀: 기준가(취소선) → <b>Early Bird −7%</b> 적용가(주황) → <b>3박 이상 연박</b> 시 Min &amp; Max Nights 추가 −5% 적용가(초록). 두 프로모션이 함께 반영됩니다.</p>
         : <p className="text-[11px] text-mute">Monthly Brief 제안을 적용하면 해당 기간(07/01~08/31) 요금에 프로모션이 자동 반영됩니다.</p>}
     </div>
   );
