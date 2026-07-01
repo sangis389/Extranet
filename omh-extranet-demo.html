@@ -322,6 +322,39 @@ function ScopeTable(){
     </table>
   );
 }
+function BriefPublishedModal({ onClose, onViewBrief, onSeePromo }){
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg fade max-h-[92vh] overflow-y-auto" onClick={e=>e.stopPropagation()}>
+        <div className="bg-omg text-white px-5 py-3 flex items-center justify-between">
+          <span className="font-bold flex items-center gap-2">📢 Monthly Brief 발행 안내</span>
+          <button onClick={onClose} className="text-white/80 hover:text-white">{I.x}</button>
+        </div>
+        <div className="p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold bg-omg/10 text-omgdeep px-2 py-0.5 rounded">Vol.20 · NE·SE Asia</span>
+            <span className="text-xs text-mute">2026.06.15 발행</span>
+          </div>
+          <h3 className="text-lg font-bold leading-snug">OHMY Monthly Brief Vol.20가 발행되었습니다</h3>
+          <p className="text-sm text-mute">“Where Are People Moving? — 여름 단거리 수요, 동북아로 집중”</p>
+          <div className="bg-page rounded-lg p-3">
+            <p className="text-xs font-semibold text-mute mb-1.5">이번 호 요약</p>
+            <ul className="space-y-1 text-sm">
+              <li className="flex gap-1.5"><span className="text-omg">•</span>여름 단거리 수요가 동북아로 집중 — 약엔 ‘막차’ + 한중 노선 완화 + 인도 붐</li>
+              <li className="flex gap-1.5"><span className="text-omg">•</span>한국–중국 +70편 증편 · 일본행 여름 예약 +70% · 인도 아웃바운드 32M</li>
+              <li className="flex gap-1.5"><span className="text-omg">•</span>‘6월이 선점 골든윈도우’ — 지금 성수기 객실을 선점하세요</li>
+            </ul>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button onClick={onViewBrief} className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-white border border-line hover:bg-page">전체 브리프 보기</button>
+            <button onClick={onSeePromo} className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-omg text-white hover:bg-omgdeep">추천 프로모션 보기</button>
+          </div>
+          <p className="text-[11px] text-mute text-center">추천 프로모션은 확인 후 적용 여부를 직접 선택하실 수 있습니다.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 function PromoModal({ onApply, onClose, goBrief }){
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
@@ -648,6 +681,7 @@ function App(){
   const open = (id)=>{ setTabs(t=>t.includes(id)?t:[...t,id]); setActive(id); };
   const close = (id,e)=>{ e.stopPropagation(); setTabs(t=>{ const n=t.filter(x=>x!==id); if(active===id) setActive(n[n.length-1]||""); return n; }); };
   const [proposal,setProposal] = useState(false);
+  const [briefModal,setBriefModal] = useState(false);
   const [applied,setApplied] = useState(false);
   const [toast,setToast] = useState("");
   useEffect(()=>{
@@ -655,7 +689,7 @@ function App(){
     const action = params.get("action"), qtab = params.get("tab");
     if(qtab==="brief"){ open("brief"); return; }
     if(action==="promo"){ open("brief"); setProposal(true); setToast("이메일에서 연결됨 · ‘지금 적용’ 한 번으로 설정이 완료됩니다"); setTimeout(()=>setToast(""),4500); return; }
-    const t=setTimeout(()=>setProposal(true),1200); return ()=>clearTimeout(t);
+    const t=setTimeout(()=>setBriefModal(true),1200); return ()=>clearTimeout(t);
   },[]);
   const openProposal = ()=>setProposal(true);
   const notify = (m)=>{ setToast(m); setTimeout(()=>setToast(""),3000); };
@@ -708,8 +742,9 @@ function App(){
           <span>© 2025 OHMYHOTEL GLOBAL PTE. LTD.</span>
         </footer>
       </div>
+      {briefModal && <BriefPublishedModal onClose={()=>setBriefModal(false)} onViewBrief={()=>{ open("brief"); setBriefModal(false); }} onSeePromo={()=>{ setBriefModal(false); setProposal(true); }} />}
       {proposal && <PromoModal onApply={applyPromo} onClose={()=>setProposal(false)} goBrief={()=>{ open("brief"); setProposal(false); }} />}
-      {!proposal && <button onClick={openProposal} className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-omg text-white px-4 py-3 rounded-full shadow-lg hover:bg-omgdeep text-sm font-semibold">💡 Brief 제안{!applied && <span className="bg-white text-omgdeep rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center">1</span>}</button>}
+      {!proposal && !briefModal && <button onClick={()=>setBriefModal(true)} className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-omg text-white px-4 py-3 rounded-full shadow-lg hover:bg-omgdeep text-sm font-semibold">📢 Brief 발행{!applied && <span className="bg-white text-omgdeep rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center">1</span>}</button>}
       {toast && <div className="fixed bottom-24 right-6 z-50 bg-side text-white text-sm px-4 py-3 rounded-lg shadow-lg fade flex items-center gap-2">✓ {toast}</div>}
     </div>
   );
